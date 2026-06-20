@@ -93,7 +93,7 @@ export async function checkSupabaseConnection(): Promise<{
             'Table "study_plans" not found. Run supabase/schema.sql in your Supabase SQL Editor.',
         };
       }
-      if (error.message.includes("fetch failed")) {
+      if (error.message.toLowerCase().includes("fetch")) {
         const diagnostics = await getFetchDiagnostics();
         return {
           ok: false,
@@ -111,7 +111,10 @@ export async function checkSupabaseConnection(): Promise<{
         ? err.cause.message
         : "";
 
-    if (message.includes("fetch failed") || cause.includes("fetch failed")) {
+    if (
+      message.toLowerCase().includes("fetch") ||
+      cause.toLowerCase().includes("fetch")
+    ) {
       const diagnostics = await getFetchDiagnostics();
       return {
         ok: false,

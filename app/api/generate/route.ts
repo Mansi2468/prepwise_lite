@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
             { status: 500 }
           );
         }
-        if (msg.includes("fetch failed")) {
+        if (msg.toLowerCase().includes("fetch")) {
           const diagnostics = await getFetchDiagnostics();
           return NextResponse.json(
             {
@@ -186,7 +186,10 @@ export async function POST(request: NextRequest) {
           ? saveErr.cause.message
           : "";
 
-      if (message.includes("fetch failed") || cause.includes("fetch failed")) {
+      if (
+        message.toLowerCase().includes("fetch") ||
+        cause.toLowerCase().includes("fetch")
+      ) {
         const diagnostics = await getFetchDiagnostics();
         return NextResponse.json(
           {

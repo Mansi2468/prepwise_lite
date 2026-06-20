@@ -10,7 +10,7 @@ export async function GET() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      if (error.message.includes("fetch failed")) {
+      if (error.message.toLowerCase().includes("fetch")) {
         const diagnostics = await getFetchDiagnostics();
         return NextResponse.json(
           { error: `Failed to fetch plans: connection to Supabase failed. Diagnostics: ${diagnostics}` },
@@ -31,7 +31,10 @@ export async function GET() {
         ? err.cause.message
         : "";
 
-    if (message.includes("fetch failed") || cause.includes("fetch failed")) {
+    if (
+      message.toLowerCase().includes("fetch") ||
+      cause.toLowerCase().includes("fetch")
+    ) {
       const diagnostics = await getFetchDiagnostics();
       return NextResponse.json(
         { error: `Failed to fetch plans: connection to Supabase failed. Diagnostics: ${diagnostics}` },
