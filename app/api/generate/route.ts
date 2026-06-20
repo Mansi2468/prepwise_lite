@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseClient } from "@/lib/supabase";
+import { getSupabaseClient, getFetchDiagnostics } from "@/lib/supabase";
 import type { GeneratePlanRequest } from "@/lib/types";
 
 function buildPrompt(subject: string, topics: string, examDate: string) {
@@ -128,23 +128,75 @@ export async function POST(request: NextRequest) {
       planContent = generateFallbackPlan(subject.trim(), topics.trim(), examDate);
     }
 
-    const supabase = getSupabaseClient();
-    const { data, error } = await supabase
-      .from("study_plans")
-      .insert({
-        subject: subject.trim(),
-        topics: topics.trim(),
-        exam_date: examDate,
-        plan: planContent,
-      })
-      .select()
-      .single();
+    let data;
+    try {
+      const supabase = getSupabaseClient();
+      const result = await supabase
+        .from("study_plans")
+        .insert({
+          subject: subject.trim(),
+          topics: topics.trim(),
+          exam_date: examDate,
+          plan: planContent,
+        })
+        .select()
+        .single();
 
-    if (error) {
-      return NextResponse.json(
-        { error: `Failed to save plan: ${error.message}` },
-        { status: 500 }
-      );
+      if (result.error) {
+        const msg = result.error.message;
+        if (msg.includes("does not exist")) {
+          return NextResponse.json(
+            {
+              error:
+                'Database table missing. Open Supabase → SQL Editor and run the script in supabase/schema.sql',
+            },
+            { status: 500 }
+          );
+        }
+        if (msg.includes("row-level security") || msg.includes("policy")) {
+          return NextResponse.json(
+            {
+              error:
+                "Insert blocked by Supabase RLS. Run supabase/schema.sql to create the required policies.",
+            },
+            { status: 500 }
+          );
+        }
+        if (msg.includes("fetch failed")) {
+          const diagnostics = await getFetchDiagnostics();
+          return NextResponse.json(
+            {
+              error: `Failed to save plan: connection to Supabase failed. Diagnostics: ${diagnostics}`,
+            },
+            { status: 503 }
+          );
+        }
+        return NextResponse.json(
+          { error: `Failed to save plan: ${msg}` },
+          { status: 500 }
+        );
+      }
+
+      data = result.data;
+    } catch (saveErr) {
+      const message =
+        saveErr instanceof Error ? saveErr.message : "Failed to save plan";
+      const cause =
+        saveErr instanceof Error && saveErr.cause instanceof Error
+          ? saveErr.cause.message
+          : "";
+
+      if (message.includes("fetch failed") || cause.includes("fetch failed")) {
+        const diagnostics = await getFetchDiagnostics();
+        return NextResponse.json(
+          {
+            error: `Failed to save plan: connection to Supabase failed. Diagnostics: ${diagnostics}`,
+          },
+          { status: 503 }
+        );
+      }
+
+      return NextResponse.json({ error: message }, { status: 500 });
     }
 
     return NextResponse.json({ plan: data });

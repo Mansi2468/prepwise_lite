@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseClient } from "@/lib/supabase";
+import { getSupabaseClient, getFetchDiagnostics } from "@/lib/supabase";
 
 export async function GET() {
   try {
@@ -10,6 +10,13 @@ export async function GET() {
       .order("created_at", { ascending: false });
 
     if (error) {
+      if (error.message.includes("fetch failed")) {
+        const diagnostics = await getFetchDiagnostics();
+        return NextResponse.json(
+          { error: `Failed to fetch plans: connection to Supabase failed. Diagnostics: ${diagnostics}` },
+          { status: 503 }
+        );
+      }
       return NextResponse.json(
         { error: `Failed to fetch plans: ${error.message}` },
         { status: 500 }
@@ -19,6 +26,18 @@ export async function GET() {
     return NextResponse.json({ plans: data ?? [] });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error";
+    const cause =
+      err instanceof Error && err.cause instanceof Error
+        ? err.cause.message
+        : "";
+
+    if (message.includes("fetch failed") || cause.includes("fetch failed")) {
+      const diagnostics = await getFetchDiagnostics();
+      return NextResponse.json(
+        { error: `Failed to fetch plans: connection to Supabase failed. Diagnostics: ${diagnostics}` },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
