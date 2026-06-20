@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PrepWise AI – Smart Study Planner
 
-## Getting Started
+A simple AI-powered study planner built with Next.js, Tailwind CSS, Supabase, and Groq API. Students enter a subject, topics, and exam date to receive a personalized day-by-day study schedule.
 
-First, run the development server:
+## Features
+
+- **Study form** – Subject, topics, and exam date input
+- **AI generation** – Groq LLM creates a personalized schedule
+- **Database storage** – Plans saved in Supabase
+- **Saved plans page** – View all generated study plans
+- **Fallback mode** – Works without Groq API using a basic template
+
+## Tech Stack
+
+- [Next.js](https://nextjs.org/) (App Router)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Supabase](https://supabase.com/)
+- [Groq API](https://groq.com/)
+- [Vercel](https://vercel.com/) (deployment)
+
+## Project Structure
+
+```
+prepwise-lite/
+├── app/
+│   ├── page.tsx              # Home – study form
+│   ├── layout.tsx            # Root layout with navbar
+│   ├── plans/page.tsx        # Saved plans list
+│   └── api/
+│       ├── generate/route.ts # AI plan generation + save
+│       └── plans/route.ts    # Fetch all plans
+├── components/
+│   ├── StudyForm.tsx
+│   ├── PlanCard.tsx
+│   └── Navbar.tsx
+├── lib/
+│   ├── supabase.ts
+│   └── types.ts
+└── supabase/schema.sql
+```
+
+## Setup
+
+### 1. Install dependencies
+
+```bash
+cd prepwise-lite
+npm install
+```
+
+### 2. Configure environment variables
+
+Copy the example file and fill in your keys:
+
+```bash
+cp .env.local.example .env.local
+```
+
+| Variable | Description |
+|----------|-------------|
+| `GROQ_API_KEY` | API key from [Groq Console](https://console.groq.com/keys) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key |
+
+### 3. Set up Supabase
+
+1. Create a free project at [supabase.com](https://supabase.com/)
+2. Open **SQL Editor** and run the script in `supabase/schema.sql`
+3. Copy your project URL and anon key into `.env.local`
+
+### 4. Run locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000).
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Push the project to GitHub
+2. Import the repo at [vercel.com/new](https://vercel.com/new)
+3. Add the same environment variables in **Project Settings → Environment Variables**
+4. Deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Usage
+
+1. Go to the home page and fill in **Subject**, **Topics** (comma-separated), and **Exam Date**
+2. Click **Generate Study Plan**
+3. The AI creates a schedule and saves it to Supabase
+4. View all plans on the **My Plans** page
+
+## Learning Outcomes
+
+- Next.js routing, components, and API routes
+- Supabase database operations (insert & select)
+- LLM integration via Groq API
+- Full-stack deployment on Vercel
